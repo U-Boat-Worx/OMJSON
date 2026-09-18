@@ -92,6 +92,12 @@ void jsonReadVariableNoCache(struct jsonReadVariableNoCache* t)
 			return;
 		}
 		
+		// Check access
+		if( !jsonInternalCheckAccess( t->pAccess, t->internal.structLevel[0].variable.name, JSON_ACCESS_READ ) ){
+			jsonInternalSetReadNoCacheError(JSON_ERR_ACCESSDENIED, t);
+			return;
+		}
+		
 		// Clear buffer
 		clearStatus = datbufClearBuffer( (UDINT)&(t->internal.outputBuffer) );
 		

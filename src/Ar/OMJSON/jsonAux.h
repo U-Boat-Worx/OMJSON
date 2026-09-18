@@ -51,7 +51,8 @@ unsigned long stringify_wstring(char *pDest, unsigned short *pSrc, unsigned long
 char *parse_number(char *pDest, char *pSrc);
 
 // Parser core - when encountering text, process appropriately
-char *parse_value(varVariable_typ *pVariable, char *value);
+// If allowWrite is 0, the value is consumed but not written to the variable
+char *parse_value(varVariable_typ *pVariable, char *value, plcbit allowWrite);
 
 // Converts value of variable to JSON representation
 unsigned short varValueToJsonString(varVariable_typ *pVariable, datbufBuffer_typ *buffer);

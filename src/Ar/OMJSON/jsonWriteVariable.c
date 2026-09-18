@@ -15,6 +15,7 @@
 #include "OMJSON.h"
 #include <string.h>
 #include "jsonAux.h"
+#include "jsonInternal.h"
 
 #ifdef __cplusplus
 	};
@@ -238,7 +239,14 @@ void jsonWriteVariable(struct jsonWriteVariable* t)
 		
 		// Get value
 		pChar = skip(pChar);
-		pChar = parse_value( &(t->internal.structLevel[t->internal.iStructLevel].variable), pChar );
+		
+		// Only values are written. Objects and arrays are handled on the next iteration, null and undefined are ignored
+		plcbit allowWrite = 1;
+		if( *pChar != '{' && *pChar != '[' && strncmp(pChar,"null",4) != 0 && strncmp(pChar,"undefined",9) != 0 ){
+			allowWrite = jsonInternalCheckAccess( t->pAccess, t->internal.structLevel[t->internal.iStructLevel].variable.name, JSON_ACCESS_WRITE );
+		}
+		
+		pChar = parse_value( &(t->internal.structLevel[t->internal.iStructLevel].variable), pChar, allowWrite );
 		if( pChar == 0 ){
 			t->Status = JSON_ERR_PARSE;
 			return;

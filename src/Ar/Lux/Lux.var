@@ -8,4 +8,9 @@
 VAR
 	gWSTimeout : BOOL;
 	jsonWebSocketServer_0 : jsonWebSocketServer;
+	gLuxAccess : jsonAccess_typ; (*Access restrictions for clients. Only used if gLuxAccessList has entries*)
+	gLuxAccessList : ARRAY[0..LUX_MAI_ACCESS] OF jsonAccessEntry_typ; (*Variables that clients are allowed to access. If element 0 is empty, clients can access ALL variables*)
+END_VAR
+VAR CONSTANT
+	LUX_MAI_ACCESS : UINT := 19;
 END_VAR

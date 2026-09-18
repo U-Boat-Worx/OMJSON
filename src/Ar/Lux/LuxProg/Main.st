@@ -16,7 +16,12 @@ PROGRAM _INIT
 	jsonWebSocketServer_0.maxClients := MAX_CLIENTS;
 	
 	// Note: ServerIP, ServerPort, BufferSize, and MaxIterations are optional and not set
+	// Without a ServerIP the server listens on all ethernet interfaces.
+	// Set ServerIP to the address of the interface the HMI is connected to if the PLC has more than one
 	jsonWebSocketServer_0.BufferSize := 200000;
+	
+	gLuxAccess.pEntries := ADR(gLuxAccessList);
+	gLuxAccess.numEntries := LUX_MAI_ACCESS + 1;
 
 	// Call jsonWebSocketServer once in the INIT routine to allocate internal memory
 	jsonWebSocketServer_0();
@@ -25,6 +30,13 @@ END_PROGRAM
 
 PROGRAM _CYCLIC
 
+	// Restrict clients to the variables in gLuxAccessList as soon as the application fills it.
+	// This is checked cyclically because the application's INIT might run after this one.
+	// While the list is empty clients can read and write ALL variables (jsonWebSocketServer_0.AccessControlActive = FALSE)
+	IF gLuxAccessList[0].name <> '' THEN
+		jsonWebSocketServer_0.pAccess := ADR(gLuxAccess);
+	END_IF
+	
 	// Call jsonWebSocketServer cyclically to serve variables
 	jsonWebSocketServer_0();
 	

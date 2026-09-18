@@ -54,6 +54,7 @@ unsigned short jsonInternalSetWSServerError(unsigned short ErrorID, struct jsonW
 		case JSON_ERR_NO_LICENSE: strcpy(t->ErrorString, "No TG license detected"); break;
 		case JSON_ERR_WS_MAX_CLIENTS: strcpy(t->ErrorString, "Max number of clients reached"); break;
 		case JSON_ERR_WS_INVALID_MAX_CLIENTS: strcpy(t->ErrorString, "Invalid input provided for maxClients"); break;
+		case JSON_ERR_ACCESSDENIED: strcpy(t->ErrorString, "Client request denied by access list. See lastDeniedName."); break;
 		default: strcpy(t->ErrorString, "Unknown error."); break;
 		
 	} // switch(ErrorID) //

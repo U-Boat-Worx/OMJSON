@@ -29,9 +29,32 @@ TYPE
 		JSON_ERR_NO_LICENSE,
 		JSON_ERR_WS_MAX_CLIENTS,
 		JSON_ERR_WS_INVALID_MAX_CLIENTS,
+		JSON_ERR_ACCESSDENIED,
 		JSON_ERR_WS_,
 		JSON_ERR_
 		);
+	JSON_ACCESS_enum :
+		(
+		JSON_ACCESS_NONE := 0,
+		JSON_ACCESS_READ,
+		JSON_ACCESS_WRITE,
+		JSON_ACCESS_READWRITE
+		);
+	jsonAccessEntry_typ : 	STRUCT
+		name : STRING[VAR_STRLEN_NAME]; (*Variable name. Grants access to the variable and everything below it (members, array elements)*)
+		access : JSON_ACCESS_enum; (*Access granted to clients*)
+	END_STRUCT;
+	jsonAccess_typ : 	STRUCT
+		pEntries : UDINT; (*Address of an array of jsonAccessEntry_typ. Variables that are not covered by an entry are not accessible*)
+		numEntries : UINT; (*Number of elements in the array at pEntries. 0 denies all access*)
+		disableWrites : BOOL; (*Reject all writes, regardless of entries*)
+		allowedClientIP : ARRAY[0..JSON_MAI_CLIENTS]OF STRING[TCPCOMM_STRLEN_IPADDRESS]; (*Client IP addresses allowed to connect. All empty allows any client*)
+		deniedReadCount : UDINT;
+		deniedWriteCount : UDINT;
+		deniedConnectCount : UDINT;
+		lastDeniedName : STRING[VAR_STRLEN_NAME];
+		lastDeniedClientIP : STRING[TCPCOMM_STRLEN_IPADDRESS];
+	END_STRUCT;
 	jsonWSS_client_info_typ : 	STRUCT 
 		Connected : BOOL;
 		TimeSinceLastRequest_ms : UDINT;

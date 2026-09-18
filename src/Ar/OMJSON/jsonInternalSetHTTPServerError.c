@@ -43,6 +43,7 @@ unsigned short jsonInternalSetHTTPServerError(unsigned short ErrorID, struct jso
 		case JSON_ERR_CACHEFULLVARS: strcpy(t->ErrorString, "Cache is full of variables. Increase JSON_MAI_CACHEVAR."); break;
 		case JSON_ERR_CACHEEMPTY: strcpy(t->ErrorString, "Cache is empty. That doesn't seem right..."); break;
 		case JSON_ERR_MAXITERATIONS: strcpy(t->ErrorString, "Maximum iterations reached. Increase MaxIterations input."); break;
+		case JSON_ERR_ACCESSDENIED: strcpy(t->ErrorString, "Client request denied by access list. See lastDeniedName."); break;
 		
 		default: strcpy(t->ErrorString, "Unknown error."); break;
 		

@@ -45,6 +45,12 @@ void jsonHTTPServer(struct jsonHTTPServer* t)
 		t->ErrorID = 0;
 		memset( &(t->ErrorString), 0, sizeof(t->ErrorString) );
 	} // AcknowledgeError
+	
+	t->AccessControlActive = (t->pAccess != 0);
+	
+	jsonAccess_typ* pAccess = (jsonAccess_typ*)t->pAccess;
+	UDINT deniedCount = 0;
+	if( pAccess != 0 ) deniedCount = pAccess->deniedReadCount + pAccess->deniedWriteCount;
 
 
 	//***************************************************
@@ -151,6 +157,7 @@ void jsonHTTPServer(struct jsonHTTPServer* t)
 		// Read variable
 		t->internal.read.readVariableList.pVariableList = t->internal.read.pRequestData;
 		t->internal.read.readVariableList.pCache = t->pCache;
+		t->internal.read.readVariableList.pAccess = t->pAccess;
 		t->internal.read.readVariableList.BufferSize = t->BufferSize;
 		t->internal.read.readVariableList.MaxIterations = t->MaxIterations;
 		
@@ -195,6 +202,7 @@ void jsonHTTPServer(struct jsonHTTPServer* t)
 		t->internal.write.writeVariable.pJSONObject = t->internal.write.pRequestData;
 		t->internal.write.writeVariable.MaxJSONObjectLength = t->BufferSize;
 		t->internal.write.writeVariable.MaxIterations = t->MaxIterations;
+		t->internal.write.writeVariable.pAccess = t->pAccess;
 		
 		jsonWriteVariable( &(t->internal.write.writeVariable) );
 		
@@ -223,6 +231,12 @@ void jsonHTTPServer(struct jsonHTTPServer* t)
 
 	t->internal.write.webService.send = 0;
 	t->internal.write.webService.abort = 0;
+
+
+	// Report denied requests. The client still gets a response
+	if( pAccess != 0 && deniedCount != pAccess->deniedReadCount + pAccess->deniedWriteCount ){
+		jsonInternalSetHTTPServerError( JSON_ERR_ACCESSDENIED, t );
+	}
 
 
 } // End Fn

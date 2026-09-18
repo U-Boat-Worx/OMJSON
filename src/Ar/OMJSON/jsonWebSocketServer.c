@@ -40,6 +40,8 @@ void jsonWebSocketServer(struct jsonWebSocketServer* t)
 		memset( &(t->ErrorString), 0, sizeof(t->ErrorString) );
 	}
 	
+	t->AccessControlActive = (t->pAccess != 0);
+	
 	// Initialize
 	//------------
 
@@ -151,6 +153,25 @@ void jsonWebSocketServer(struct jsonWebSocketServer* t)
 		
 			strcpy(t->ClientInfo[t->internal.iClient].ClientIP, t->internal.wsServer.out.connection.parameters.IPAddress);
 			t->ClientInfo[t->internal.iClient].ClientPort = t->internal.wsServer.out.connection.parameters.Port;
+			
+			// Check client against allowed IP addresses. If none are configured, any client is allowed
+			if (t->pAccess != 0) {
+				jsonAccess_typ* pAccess = (jsonAccess_typ*)t->pAccess;
+				plcbit ipConfigured = 0, ipAllowed = 0;
+				unsigned int iIP;
+				for (iIP = 0; iIP <= JSON_MAI_CLIENTS; iIP++) {
+					if (pAccess->allowedClientIP[iIP][0] == 0) continue;
+					ipConfigured = 1;
+					if (strcmp(pAccess->allowedClientIP[iIP], t->ClientInfo[t->internal.iClient].ClientIP) == 0) ipAllowed = 1;
+				}
+				if (ipConfigured && !ipAllowed) {
+					t->internal.client[t->internal.iClient].wsStream.in.cmd.receive = 0;
+					t->internal.client[t->internal.iClient].wsStream.in.cmd.close = 1;
+					pAccess->deniedConnectCount++;
+					strcpy(pAccess->lastDeniedClientIP, t->ClientInfo[t->internal.iClient].ClientIP);
+					jsonInternalSetWSServerError(JSON_ERR_ACCESSDENIED, t);
+				}
+			}
 		}
 	}
 
@@ -384,6 +405,10 @@ void jsonWebSocketServer(struct jsonWebSocketServer* t)
 			STRING responseType[13+1];
 			char *pResponseData;
 			UDINT responseDataLength;
+			
+			jsonAccess_typ* pAccess = (jsonAccess_typ*)t->pAccess;
+			UDINT deniedCount = 0;
+			if (pAccess != 0) deniedCount = pAccess->deniedReadCount + pAccess->deniedWriteCount;
 		
 			// Only check first character of requestType for speed
 			// NOTE: This might be silly...
@@ -392,6 +417,7 @@ void jsonWebSocketServer(struct jsonWebSocketServer* t)
 				// Read
 				t->internal.client[index].readVariableList.pVariableList = (UDINT)pMessageData;
 				t->internal.client[index].readVariableList.pCache = (UDINT)t->internal.client[index].pCache;
+				t->internal.client[index].readVariableList.pAccess = t->pAccess;
 				t->internal.client[index].readVariableList.BufferSize = t->BufferSize;
 				t->internal.client[index].readVariableList.MaxIterations = t->MaxIterations;
 			
@@ -409,6 +435,7 @@ void jsonWebSocketServer(struct jsonWebSocketServer* t)
 				t->internal.client[index].writeVariable.pJSONObject = (UDINT)pMessageData;
 				t->internal.client[index].writeVariable.MaxJSONObjectLength = t->BufferSize;
 				t->internal.client[index].writeVariable.MaxIterations = t->MaxIterations;
+				t->internal.client[index].writeVariable.pAccess = t->pAccess;
 			
 				jsonWriteVariable(&t->internal.client[index].writeVariable);
 			
@@ -424,6 +451,12 @@ void jsonWebSocketServer(struct jsonWebSocketServer* t)
 				jsonInternalSetWSServerError(JSON_ERR_PARSE, t);
 				continue;
 			
+			}
+			
+			// Report denied requests. The client still gets a response
+			if (pAccess != 0 && deniedCount != pAccess->deniedReadCount + pAccess->deniedWriteCount) {
+				strcpy(pAccess->lastDeniedClientIP, t->ClientInfo[index].ClientIP);
+				jsonInternalSetWSServerError(JSON_ERR_ACCESSDENIED, t);
 			}
 		
 		

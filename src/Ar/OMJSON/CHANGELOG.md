@@ -1,5 +1,10 @@
 # Change log
 
+2.1.0 - Add optional access list (pAccess input, jsonAccess_typ) to restrict which variables clients can read and write
+        Add disableWrites switch and allowed client IP list
+        Add AccessControlActive output to jsonWebSocketServer and jsonHTTPServer
+        Without pAccess the behavior is unchanged: clients can read and write all variables
+
 2.0.0 - Migrate to Automation Studio 6 (AS6)
         Bump all Loupe dependency versions to AS6 releases (VarTools, DataBuffer, TCPComm, StringExt, WebSocket >=1.0.0)
         Apply (UDINT) casts to stringlcpy calls for AS6/StringExt 1.0.0 API compatibility

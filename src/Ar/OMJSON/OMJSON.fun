@@ -16,9 +16,11 @@ FUNCTION_BLOCK jsonWebSocketServer (*Serve variables via JSON and WebSockets*) (
 		MaxIterations : UDINT; (*Maximum number of iterations for looping through variables.*)
 		AcknowledgeError : BOOL; (*Acknowledge errors. Automatically reset by FUB.*)
 		Timeout : UDINT; (*Max time in miliseconds since last message from client before forcing disconnect*)
+		pAccess : UDINT; (*Optional address of a jsonAccess_typ. 0 allows access to all variables*)
 	END_VAR
 	VAR_OUTPUT
 		ClientInfo : ARRAY[0..JSON_MAI_CLIENTS] OF jsonWSS_client_info_typ;
+		AccessControlActive : BOOL; (*An access list is in use. If FALSE, clients can read and write all variables*)
 		Error : BOOL;
 		ErrorID : UINT;
 		ErrorString : STRING[JSON_STRLEN_ERROR];
@@ -35,8 +37,10 @@ FUNCTION_BLOCK jsonHTTPServer (*Serve variables via JSON and HTTP*) (*$GROUP=Use
 		BufferSize : UDINT; (*Size of buffers. N buffers will be allocated, so the total memory requirement is N*BufferSize.*)
 		MaxIterations : UDINT; (*Maximum number of iterations for looping through variables.*)
 		AcknowledgeError : BOOL; (*Acknowledge errors. Automatically reset by FUB.*)
+		pAccess : UDINT; (*Optional address of a jsonAccess_typ. 0 allows access to all variables*)
 	END_VAR
 	VAR_OUTPUT
+		AccessControlActive : BOOL; (*An access list is in use. If FALSE, clients can read and write all variables*)
 		Error : BOOL;
 		ErrorID : UINT;
 		ErrorString : STRING[JSON_STRLEN_ERROR];
@@ -51,6 +55,7 @@ FUNCTION_BLOCK jsonWriteVariable (*Write variable values received as a JSON obje
 		pJSONObject : UDINT; (*Address of the JSON object*)
 		MaxJSONObjectLength : UDINT; (*Maximum length of the JSON object*)
 		MaxIterations : UDINT; (*Maximum number of iterations for expanding structures*)
+		pAccess : UDINT; (*Optional address of a jsonAccess_typ. 0 allows access to all variables*)
 	END_VAR
 	VAR_OUTPUT
 		Status : UINT; (*0 = Done, 65535 = Busy, other values are errors*)
@@ -66,6 +71,7 @@ FUNCTION_BLOCK jsonReadVariableList (*Convert a list of variables into a JSON ob
 		pCache : UDINT;
 		BufferSize : UDINT;
 		MaxIterations : UDINT;
+		pAccess : UDINT; (*Optional address of a jsonAccess_typ. 0 allows access to all variables*)
 	END_VAR
 	VAR_OUTPUT
 		Status : UINT;
@@ -83,6 +89,7 @@ FUNCTION_BLOCK jsonReadVariable (*Convert a variable into a JSON object*) (*$GRO
 		pCache : UDINT;
 		BufferSize : UDINT;
 		MaxIterations : UDINT;
+		pAccess : UDINT; (*Optional address of a jsonAccess_typ. 0 allows access to all variables*)
 	END_VAR
 	VAR_OUTPUT
 		Status : UINT;
@@ -114,6 +121,7 @@ FUNCTION_BLOCK jsonReadVariableNoCache (*Convert a variable into a JSON object w
 		pVariableName : UDINT; (*Address of name of variable to convert to JSON*)
 		BufferSize : UDINT; (*Size of internal data buffer*)
 		MaxIterations : UDINT; (*Maximum number of iterations for expanding structures*)
+		pAccess : UDINT; (*Optional address of a jsonAccess_typ. 0 allows access to all variables*)
 	END_VAR
 	VAR_OUTPUT
 		Status : UINT; (*0 = Done, 65535 = Busy, other values are errors*)

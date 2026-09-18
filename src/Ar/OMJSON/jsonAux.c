@@ -469,7 +469,7 @@ char *parse_number(char *pDest, char *pSrc)
 
 
 // Parser core - when encountering text, process appropriately
-char *parse_value(varVariable_typ *pVariable, char *value)
+char *parse_value(varVariable_typ *pVariable, char *value, plcbit allowWrite)
 {
 
 	if( pVariable == 0 || value == 0 ) return 0;
@@ -477,6 +477,25 @@ char *parse_value(varVariable_typ *pVariable, char *value)
 	if( !strncmp(value,"null",4) ) return value+4;
 	
 	if( !strncmp(value,"undefined",9) ) return value+9;
+	
+	if( !allowWrite ){
+		// Skip over the value without touching the variable
+		if( !strncmp(value,"false",5) ) return value+5;
+		if( !strncmp(value,"true",4) ) return value+4;
+		if( *value == '\"' ){
+			value++;
+			while( *value && *value != '\"' ){
+				if( *value == '\\' && value[1] ) value++;
+				value++;
+			}
+			if( *value == '\"' ) value++;
+			return value;
+		}
+		if( *value=='-' || (*value>='0' && *value<='9') ){
+			while( *value && *value!=',' && *value!=']' && *value!='}' && *value!=' ' && *value!='\n' && *value!='\r' && *value!='\t' ) value++;
+		}
+		return value;
+	}
 	
 	varGetInfo( (UDINT)pVariable );
 	

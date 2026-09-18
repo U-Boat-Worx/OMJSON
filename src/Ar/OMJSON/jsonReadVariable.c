@@ -84,6 +84,22 @@ void jsonReadVariable(struct jsonReadVariable* t)
 		return;
 	}
 
+	// Check access. A denied variable looks the same to the client as one that does not exist
+	if( !jsonInternalCheckAccess( t->pAccess, varName, JSON_ACCESS_READ ) ){
+	
+		UINT deniedStatus = datbufClearBuffer( (UDINT)&(t->internal.outputBuffer) );
+		if( deniedStatus == 0 ) deniedStatus = datbufAppendToBuffer( (UDINT)&(t->internal.outputBuffer), (UDINT)&("{\""), 2 );
+		if( deniedStatus == 0 ) deniedStatus = datbufAppendToBuffer( (UDINT)&(t->internal.outputBuffer), (UDINT)&varName, strlen(varName) );
+		if( deniedStatus == 0 ) deniedStatus = datbufAppendToBuffer( (UDINT)&(t->internal.outputBuffer), (UDINT)&("\":\"undefined\"}"), 14 );
+		if( deniedStatus != 0 ){ jsonInternalSetReadError(deniedStatus, t); return; }
+		
+		t->Status = 0;
+		t->pJSONObject = t->internal.outputBuffer.pData;
+		t->JSONObjectLength = t->internal.outputBuffer.currentLength;
+		return;
+	
+	}
+
 	// Find varName in cache
 	jsonCache_typ* pCache = (jsonCache_typ*)(t->pCache);
 	UDINT i = 0;

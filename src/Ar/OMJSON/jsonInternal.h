@@ -24,6 +24,7 @@ unsigned short jsonInternalSetReadListError(unsigned short ErrorID, struct jsonR
 unsigned short jsonInternalSetReadError(unsigned short ErrorID, struct jsonReadVariable* t);
 unsigned short jsonInternalSetAddError(unsigned short ErrorID, struct jsonAddVariableToCache* t);
 unsigned short jsonInternalSetReadNoCacheError(unsigned short ErrorID, struct jsonReadVariableNoCache* t);
+plcbit jsonInternalCheckAccess(UDINT pAccess, char* name, UDINT required);
 
 #ifdef __cplusplus
 	};

@@ -116,6 +116,7 @@ void jsonReadVariableList(struct jsonReadVariableList* t)
 		// Read varName
 		t->internal.readVariable.pVariableName = (UDINT)&varName;
 		t->internal.readVariable.pCache = t->pCache;
+		t->internal.readVariable.pAccess = t->pAccess;
 		t->internal.readVariable.BufferSize = t->BufferSize;
 		t->internal.readVariable.MaxIterations = t->MaxIterations;
 			

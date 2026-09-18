@@ -1,6 +1,6 @@
 ﻿<?xml version="1.0" encoding="utf-8"?>
 <?AutomationStudio FileVersion="4.9"?>
-<Library Version="2.0.0" SubType="ANSIC" xmlns="http://br-automation.co.at/AS/Library">
+<Library Version="2.1.0" SubType="ANSIC" xmlns="http://br-automation.co.at/AS/Library">
   <Files>
     <File Description="Exported data types">OMJSON.typ</File>
     <File Description="Exported constants">OMJSON.var</File>
@@ -22,6 +22,7 @@
     <File Description="Internal: Set error status on a jsonAddVariableToCache FUB instance">jsonInternalSetAddError.c</File>
     <File Description="Internal: Set error status on a jsonReadVariableNoCache FUB instance">jsonInternalSetReadNoCacheError.c</File>
     <File>jsonInternalWrapper.c</File>
+    <File Description="Internal: Check a variable name against an access list">jsonAccess.c</File>
   </Files>
   <Dependencies>
     <Dependency ObjectName="VarTools" FromVersion="1.0.0" />
