@@ -141,9 +141,12 @@ void jsonWebSocketServer(struct jsonWebSocketServer* t)
 			t->internal.client[t->internal.iClient].wsStream.in.cfg.bufferSize = t->BufferSize;
 		
 			t->internal.client[t->internal.iClient].wsStream.in.cmd.receive = 1;
-		
+
 			t->internal.client[t->internal.iClient].wsConnected = 0;
-			
+
+			// A new connection starts without a login
+			jsonInternalLoginEnd(t, t->internal.iClient);
+
 			// Clear cache
 			t->internal.client[t->internal.iClient].pCache = &(((jsonCache_typ*)t->pCacheArray)[t->internal.iClient]);
 			t->internal.client[t->internal.iClient].pCache->iItem = 0; // Lazy clear cache
@@ -176,6 +179,8 @@ void jsonWebSocketServer(struct jsonWebSocketServer* t)
 	}
 
 
+	jsonInternalLockoutCycle(t);
+
 	// Manage WebSocket
 	//------------------
 	t->internal.connectedClients = 0;
@@ -193,7 +198,10 @@ void jsonWebSocketServer(struct jsonWebSocketServer* t)
 	
 		wsReceive(&t->internal.client[index].wsStream);
 		t->internal.client[index].wsConnected = t->internal.client[index].wsStream.out.connected;
-		
+
+		// Login timeout, and the end of a login whose connection closed
+		jsonInternalLoginCycle(t, index);
+
 		// Start timer by default. It is reset when a request is properly processed.
 		t->internal.client[index].requestTimer.IN = t->internal.client[index].wsConnected;
 		
@@ -402,7 +410,8 @@ void jsonWebSocketServer(struct jsonWebSocketServer* t)
 		
 			// Process request - NOTE: Make this a private function
 			//--------------------------------------------
-			STRING responseType[13+1];
+			STRING responseType[15+1];
+			char loginResponse[96];
 			char *pResponseData;
 			UDINT responseDataLength;
 			
@@ -436,15 +445,29 @@ void jsonWebSocketServer(struct jsonWebSocketServer* t)
 				t->internal.client[index].writeVariable.MaxJSONObjectLength = t->BufferSize;
 				t->internal.client[index].writeVariable.MaxIterations = t->MaxIterations;
 				t->internal.client[index].writeVariable.pAccess = t->pAccess;
-			
+				t->internal.client[index].writeVariable.ClientLevel = t->ClientInfo[index].Level;
+
 				jsonWriteVariable(&t->internal.client[index].writeVariable);
-			
+
 				if (t->internal.client[index].writeVariable.Status != 0) { jsonInternalSetWSServerError(t->internal.client[index].writeVariable.Status, t); continue; }
-			
+
+				// A write is activity; polling reads are not
+				if (t->ClientInfo[index].Level != 0) jsonInternalLoginActivity(t, index);
+
 				strcpy(responseType, "writeresponse");
 				pResponseData = pMessageData; // NOTE: This echoes the received data. Might want to do something different later.
 				responseDataLength = dataLength;
-			
+
+			} else if (strcmp(requestType, "login") == 0 || strcmp(requestType, "logout") == 0 || strcmp(requestType, "touch") == 0) {
+
+				// Login, logout or touch: answered with the session state, never with the request
+				jsonInternalLoginRequest(t, index, requestType, pMessageData, loginResponse, sizeof(loginResponse));
+
+				strcpy(responseType, requestType);
+				strcat(responseType, "response");
+				pResponseData = loginResponse;
+				responseDataLength = strlen(loginResponse);
+
 			} else {
 			
 				// BONK! NOTE: Do something better here.

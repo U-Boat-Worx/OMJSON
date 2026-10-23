@@ -1,6 +1,6 @@
 ﻿<?xml version="1.0" encoding="utf-8"?>
 <?AutomationStudio FileVersion="4.9"?>
-<Library Version="2.1.0" SubType="ANSIC" xmlns="http://br-automation.co.at/AS/Library">
+<Library Version="2.2.0" SubType="ANSIC" xmlns="http://br-automation.co.at/AS/Library">
   <Files>
     <File Description="Exported data types">OMJSON.typ</File>
     <File Description="Exported constants">OMJSON.var</File>
@@ -23,6 +23,11 @@
     <File Description="Internal: Set error status on a jsonReadVariableNoCache FUB instance">jsonInternalSetReadNoCacheError.c</File>
     <File>jsonInternalWrapper.c</File>
     <File Description="Internal: Check a variable name against an access list">jsonAccess.c</File>
+    <File Description="Internal: WebSocket client login, logout, timeout and lockout">jsonLogin.c</File>
+    <File>jsonCredential.h</File>
+    <File Description="Internal: SHA-256, password check and login request parser">jsonCredential.c</File>
+    <File>jsonName.h</File>
+    <File Description="Internal: canonical variable names and access list matching">jsonName.c</File>
   </Files>
   <Dependencies>
     <Dependency ObjectName="VarTools" FromVersion="1.0.0" />

@@ -43,6 +43,13 @@ TYPE
 	jsonAccessEntry_typ : 	STRUCT
 		name : STRING[VAR_STRLEN_NAME]; (*Variable name. Grants access to the variable and everything below it (members, array elements)*)
 		access : JSON_ACCESS_enum; (*Access granted to clients*)
+		writeLevel : USINT; (*Login level a client needs to write here. 0 = any client, logged in or not. Reads are not affected*)
+	END_STRUCT;
+	jsonUser_typ : 	STRUCT
+		name : STRING[JSON_STRLEN_USER]; (*Login name, case-sensitive*)
+		salt : STRING[JSON_STRLEN_SALT]; (*Any text, different for every user*)
+		hash : STRING[JSON_STRLEN_HASH]; (*SHA-256 of salt followed by the password, as 64 hex digits*)
+		level : USINT; (*Login level a client gets as this user. 0 disables the user*)
 	END_STRUCT;
 	jsonAccess_typ : 	STRUCT
 		pEntries : UDINT; (*Address of an array of jsonAccessEntry_typ. Variables that are not covered by an entry are not accessible*)
@@ -54,12 +61,24 @@ TYPE
 		deniedConnectCount : UDINT;
 		lastDeniedName : STRING[VAR_STRLEN_NAME];
 		lastDeniedClientIP : STRING[TCPCOMM_STRLEN_IPADDRESS];
+		pUsers : UDINT; (*Address of an array of jsonUser_typ for WebSocket logins. 0 disables login: every client stays at level 0*)
+		numUsers : UINT; (*Number of elements in the array at pUsers*)
+		loginTimeout : UDINT; (*ms without a write or touch before a logged-in client drops back to level 0. 0 = JSON_DEFAULT_LOGINTIMEOUT*)
+		loginLockout : UDINT; (*ms after the last failed login until failures are forgotten; JSON_LOGIN_MAX_FAILURES of them refuse logins until then. 0 = JSON_DEFAULT_LOGINLOCKOUT*)
+		loginCount : UDINT; (*Successful logins*)
+		loginFailCount : UDINT; (*Failed logins; attempts refused during a lockout are not counted*)
+		logoutCount : UDINT; (*Sessions ended by the client's logout*)
+		loginTimeoutCount : UDINT; (*Sessions ended by loginTimeout*)
+		lastLoginUser : STRING[JSON_STRLEN_USER]; (*User name of the last login attempt, failed or not*)
+		lastLoginClientIP : STRING[TCPCOMM_STRLEN_IPADDRESS]; (*Client of the last login attempt*)
 	END_STRUCT;
-	jsonWSS_client_info_typ : 	STRUCT 
+	jsonWSS_client_info_typ : 	STRUCT
 		Connected : BOOL;
 		TimeSinceLastRequest_ms : UDINT;
 		ClientIP : STRING[TCPCOMM_STRLEN_IPADDRESS];
 		ClientPort : UINT;
+		Level : USINT; (*Login level of the connection. 0 = not logged in. Reset when the connection closes*)
+		User : STRING[JSON_STRLEN_USER]; (*User the connection is logged in as*)
 	END_STRUCT;
 	jsonWSS_client_debug_typ : 	STRUCT 
 		socketConnectCount : DINT;
@@ -88,6 +107,7 @@ TYPE
 		debug : jsonWSS_client_debug_typ;
 		requestTimer : TON_10ms;
 		pCache : REFERENCE TO jsonCache_typ;
+		loginTimer : TON_10ms; (*Time since the last write or touch of a logged-in client*)
 	END_STRUCT;
 	jsonWSServer_Internal_typ : 	STRUCT 
 		initialized : BOOL;
@@ -97,8 +117,10 @@ TYPE
 		iClient : UINT;
 		connectedClients : UINT;
 		maxClients : UINT;
+		loginFailures : USINT; (*Failed logins in a row, over all clients*)
+		lockoutTimer : TON_10ms;
 	END_STRUCT;
-	jsonHTTPServer_Int_Debug_typ : 	STRUCT 
+	jsonHTTPServer_Int_Debug_typ : 	STRUCT
 		readSendCommand : BOOL;
 	END_STRUCT;
 	jsonHTTPServer_Int_Write_typ : 	STRUCT 

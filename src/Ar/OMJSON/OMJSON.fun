@@ -56,6 +56,7 @@ FUNCTION_BLOCK jsonWriteVariable (*Write variable values received as a JSON obje
 		MaxJSONObjectLength : UDINT; (*Maximum length of the JSON object*)
 		MaxIterations : UDINT; (*Maximum number of iterations for expanding structures*)
 		pAccess : UDINT; (*Optional address of a jsonAccess_typ. 0 allows access to all variables*)
+		ClientLevel : USINT; (*Login level of the writer, checked against jsonAccessEntry_typ.writeLevel*)
 	END_VAR
 	VAR_OUTPUT
 		Status : UINT; (*0 = Done, 65535 = Busy, other values are errors*)

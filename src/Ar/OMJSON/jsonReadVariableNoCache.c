@@ -93,7 +93,7 @@ void jsonReadVariableNoCache(struct jsonReadVariableNoCache* t)
 		}
 		
 		// Check access
-		if( !jsonInternalCheckAccess( t->pAccess, t->internal.structLevel[0].variable.name, JSON_ACCESS_READ ) ){
+		if( !jsonInternalCheckAccess( t->pAccess, t->internal.structLevel[0].variable.name, JSON_ACCESS_READ, 0 ) ){
 			jsonInternalSetReadNoCacheError(JSON_ERR_ACCESSDENIED, t);
 			return;
 		}

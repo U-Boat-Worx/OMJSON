@@ -85,7 +85,7 @@ void jsonReadVariable(struct jsonReadVariable* t)
 	}
 
 	// Check access. A denied variable looks the same to the client as one that does not exist
-	if( !jsonInternalCheckAccess( t->pAccess, varName, JSON_ACCESS_READ ) ){
+	if( !jsonInternalCheckAccess( t->pAccess, varName, JSON_ACCESS_READ, 0 ) ){
 	
 		UINT deniedStatus = datbufClearBuffer( (UDINT)&(t->internal.outputBuffer) );
 		if( deniedStatus == 0 ) deniedStatus = datbufAppendToBuffer( (UDINT)&(t->internal.outputBuffer), (UDINT)&("{\""), 2 );

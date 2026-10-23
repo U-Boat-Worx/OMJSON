@@ -24,7 +24,15 @@ unsigned short jsonInternalSetReadListError(unsigned short ErrorID, struct jsonR
 unsigned short jsonInternalSetReadError(unsigned short ErrorID, struct jsonReadVariable* t);
 unsigned short jsonInternalSetAddError(unsigned short ErrorID, struct jsonAddVariableToCache* t);
 unsigned short jsonInternalSetReadNoCacheError(unsigned short ErrorID, struct jsonReadVariableNoCache* t);
-plcbit jsonInternalCheckAccess(UDINT pAccess, char* name, UDINT required);
+plcbit jsonInternalCheckAccess(UDINT pAccess, char* name, UDINT required, USINT level);
+
+// WebSocket client login (jsonLogin.c)
+void jsonInternalLoginRequest(struct jsonWebSocketServer* t, UINT index, const char* requestType,
+	char* pData, char* pResponse, UDINT responseSize);
+void jsonInternalLoginActivity(struct jsonWebSocketServer* t, UINT index);
+void jsonInternalLoginEnd(struct jsonWebSocketServer* t, UINT index);
+void jsonInternalLoginCycle(struct jsonWebSocketServer* t, UINT index);
+void jsonInternalLockoutCycle(struct jsonWebSocketServer* t);
 
 #ifdef __cplusplus
 	};

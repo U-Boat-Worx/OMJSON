@@ -14,6 +14,7 @@
 
 	#include "OMJSON.h"
 	#include "jsonInternal.h"
+	#include "jsonName.h"
 	#include <string.h>
 
 #ifdef __cplusplus
@@ -27,8 +28,9 @@
 
 // Returns 1 if access is granted, 0 if it is denied
 // required must be JSON_ACCESS_READ or JSON_ACCESS_WRITE
+// level is the client's login level; a write also needs the entry's writeLevel
 
-plcbit jsonInternalCheckAccess(UDINT pAccess, char* name, UDINT required)
+plcbit jsonInternalCheckAccess(UDINT pAccess, char* name, UDINT required, USINT level)
 {
 
 	jsonAccess_typ* access = (jsonAccess_typ*)pAccess;
@@ -37,8 +39,11 @@ plcbit jsonInternalCheckAccess(UDINT pAccess, char* name, UDINT required)
 	if( access == 0 ) return 1;
 
 	UDINT granted = JSON_ACCESS_NONE;
+	USINT writeLevel = 0;
 
-	if( name != 0 && access->pEntries != 0 ){
+	// Only the canonical spelling is matched: another one (HMI_Cmd[05]) could reach
+	// the same variable past a more specific entry. Case is ignored, as IEC does.
+	if( jsonNameIsCanonical(name) && access->pEntries != 0 ){
 
 		jsonAccessEntry_typ* entry = (jsonAccessEntry_typ*)access->pEntries;
 		UDINT i, length, matchLength = 0;
@@ -50,12 +55,12 @@ plcbit jsonInternalCheckAccess(UDINT pAccess, char* name, UDINT required)
 
 			// name has to be the entry itself or something below it.
 			// 'gHmi' covers 'gHmi', 'gHmi.cmd' and 'gHmi[0]', but not 'gHmiOther'
-			if( strncmp(name, entry[i].name, length) != 0 ) continue;
-			if( name[length] != 0 && name[length] != '.' && name[length] != '[' ) continue;
+			if( !jsonNameIsBelow(name, entry[i].name) ) continue;
 
-			// Most specific entry wins
+			// Most specific entry wins, its write level included
 			matchLength = length;
 			granted = entry[i].access;
+			writeLevel = entry[i].writeLevel;
 
 		}
 
@@ -64,7 +69,8 @@ plcbit jsonInternalCheckAccess(UDINT pAccess, char* name, UDINT required)
 	plcbit allowed;
 
 	if( required == JSON_ACCESS_WRITE ){
-		allowed = (granted == JSON_ACCESS_WRITE || granted == JSON_ACCESS_READWRITE) && !access->disableWrites;
+		allowed = (granted == JSON_ACCESS_WRITE || granted == JSON_ACCESS_READWRITE) && !access->disableWrites
+			&& level >= writeLevel;
 		if( !allowed ) access->deniedWriteCount++;
 	}
 	else{

@@ -1,5 +1,14 @@
 # Change log
 
+2.2.0 - Add an optional WebSocket login: users with a salted SHA-256 password hash (jsonAccess_typ.pUsers),
+        login / logout / touch messages, a login level per connection (ClientInfo[].Level, .User)
+        Add writeLevel to jsonAccessEntry_typ: the login level a client needs to write there
+        Add login timeout, lockout after JSON_LOGIN_MAX_FAILURES failed logins, and login counters
+        Add ClientLevel input to jsonWriteVariable
+        Without users, every client is level 0 and writeLevel 0 entries apply as before
+        Access list: deny names that are not spelled canonically (gArray[02], gArray[ 2]), which could reach a
+        variable past the entry meant for it; match entry names ignoring case, as IEC does
+
 2.1.0 - Add optional access list (pAccess input, jsonAccess_typ) to restrict which variables clients can read and write
         Add disableWrites switch and allowed client IP list
         Add AccessControlActive output to jsonWebSocketServer and jsonHTTPServer
